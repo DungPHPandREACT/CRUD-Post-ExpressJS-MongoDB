@@ -70,8 +70,10 @@ export const authLogin = async (req: Request, res: Response): Promise<any> => {
 
 		const token = jwt.sign(
 			{
-				userId: user._id,
+				id: user._id,
 				email: user.email,
+                role: user.role,
+                username: user.username
 			},
 			SECRET_KEY,
 			{ expiresIn: '1h' }

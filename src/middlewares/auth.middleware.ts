@@ -41,7 +41,7 @@ export const authenticateToken = (
 			}
 
 			req.user = {
-				id: user.id,
+				id: user.userId,
 				role: user.role,
 				username: user.username,
 				email: user.email,
