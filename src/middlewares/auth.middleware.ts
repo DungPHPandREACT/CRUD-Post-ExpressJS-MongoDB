@@ -5,19 +5,15 @@ import { CustomRequest } from '../dtos/express.dto';
 import { User } from '../dtos/user.dto';
 import { users } from '../mock/users';
 import { Role } from '../dtos/role.dto';
+import postModel from '../post/post.model';
 dotenv.config();
 
 const SECRET_KEY = process.env.SECRET_KEY ?? '';
 
 // viewer, editor, admin
-const roles = ['viewer', 'editor', 'admin'];
 const rolesApp: Record<string, Role> = {
-	admin: {
-		name: 'admin',
-		permissions: ['create', 'update', 'read', 'delete'],
-	},
-	editor: {
-		name: 'editor',
+	user: {
+		name: 'user',
 		permissions: ['create', 'update', 'read', 'delete'],
 	},
 	viewer: {
@@ -41,11 +37,13 @@ export const authenticateToken = (
 			}
 
 			req.user = {
-				id: user.userId,
+				id: user.id,
 				role: user.role,
 				username: user.username,
 				email: user.email,
 			};
+
+
 			next();
 		});
 	} else {
@@ -61,17 +59,46 @@ export const authorization = (
 	next: NextFunction
 ): any => {
 	const user: User = req.user as User;
-	console.log('user: ', user)
+	const { id } = user;
 	const roleUser = user.role;
 	// roleUser = viewer
-	if (!roleUser || !roles.includes(roleUser)) {
+	if (!roleUser || !rolesApp[roleUser]?.permissions) {
 		return res.status(403).json({
 			message: 'Bạn không đủ truy cập vào chức năng này',
 		});
 	}
 
-	return res.status(200).json({
-		message: `Quyền của bạn là: ${rolesApp[roleUser].permissions}`,
-	});
-	// next();
+	// return res.status(200).json({
+	// 	message: `Quyền của bạn là: ${rolesApp[roleUser]?.permissions}`,
+	// });
+
+
+	next();
 };
+
+export const checkOwnership = async (req: CustomRequest, res: Response, next: NextFunction): Promise<any> => {
+	try{
+		const userId = req.user?.id ?? '';
+		const postId = req.params.id;
+
+		const post = await postModel.findOne({
+			_id: postId
+		})
+
+		if(!post){
+			return res.status(404).json({
+				message: 'Bài viết không tồn tại'
+			})
+		}
+
+
+		if(post.author.toString() !== userId.toString()){
+			return res.status(403).json({
+				message: 'Bạn không có quyền truy cập bài viết này'
+			})
+		}
+		next();
+	} catch(err){
+		res.status(500).json({message: 'Lỗi máy chủ'})
+	}
+}
