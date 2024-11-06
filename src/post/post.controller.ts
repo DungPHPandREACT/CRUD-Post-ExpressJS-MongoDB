@@ -2,27 +2,34 @@ import { Request, Response } from 'express';
 import { CustomRequest } from '../dtos/express.dto';
 import { Post } from './post.dto';
 import postModel from './post.model';
+import { createPostService } from './post.service';
 
 export const createPost = async (req: CustomRequest, res: Response) => {
 	try {
 		const payload: Post = req.body;
-		const { title, description, content } = payload;
+
 		const author = req.user?.id;
+		if (author) {
+			const newPost = {
+				title: payload.title,
+				description: payload.description,
+				content: payload.content,
+				author,
+			};
 
-		const newPost = new postModel({
-			title,
-			description,
-			content,
-			author,
-		});
+			const response = await createPostService(newPost);
 
-		const response = await newPost.save();
-
-		res.status(201).json({
-			statue: 'success',
-			message: 'Tạo bài viết thành công',
-			data: response,
-		});
+			res.status(201).json({
+				statue: 'success',
+				message: 'Tạo bài viết thành công',
+				data: response,
+			});
+		} else{
+			res.status(400).json({
+				statue: 'success',
+				message: 'Không có dữ liệu về tác giả',
+			});
+		}
 	} catch (err) {
 		res.status(500).json({
 			statue: 'error',
