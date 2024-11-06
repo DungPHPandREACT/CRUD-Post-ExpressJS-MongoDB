@@ -45,7 +45,19 @@ export const readPosts = async (req: Request, res: Response) => {
 };
 
 export const readPost = async (req: Request, res: Response) => {
-	res.status(200).json({ message: 'Read a post success' });
+	const idPost = req.params.id;
+	try {
+		const post = await postModel.findOne({
+			_id: idPost
+		}).populate('author', 'username email');
+
+		res.status(200).json({ status: 'success', data: post });
+	} catch (err) {
+		res.status(500).json({
+			statue: 'error',
+			message: 'Không thể lấy được danh sách bài viết',
+		});
+	}
 };
 
 export const updatePost = async (req: Request, res: Response) => {
