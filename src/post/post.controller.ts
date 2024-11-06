@@ -47,9 +47,11 @@ export const readPosts = async (req: Request, res: Response) => {
 export const readPost = async (req: Request, res: Response) => {
 	const idPost = req.params.id;
 	try {
-		const post = await postModel.findOne({
-			_id: idPost
-		}).populate('author', 'username email');
+		const post = await postModel
+			.findOne({
+				_id: idPost,
+			})
+			.populate('author', 'username email');
 
 		res.status(200).json({ status: 'success', data: post });
 	} catch (err) {
@@ -61,9 +63,31 @@ export const readPost = async (req: Request, res: Response) => {
 };
 
 export const updatePost = async (req: Request, res: Response) => {
-	res.status(200).json({ message: 'Update post success' });
+	const idPost = req.params.id;
+	const payload: Post = req.body;
+	try {
+		const updatePost = await postModel.findByIdAndUpdate(idPost, payload, {
+			new: true,
+		});
+
+		res.status(201).json({
+			statue: 'success',
+			message: 'Cập nhật bài viết thành công',
+			data: updatePost,
+		});
+	} catch (err) {
+		res.status(500).json({ message: 'Có lỗi xảy ra khi sửa bài viết' });
+	}
 };
 
 export const deletePost = async (req: Request, res: Response) => {
-	res.status(200).json({ message: 'Delete post success' });
+	const idPost = req.params.id;
+
+	try {
+		await postModel.findByIdAndDelete(idPost);
+
+		res.status(200).json({ message: 'Xóa bài viết thành công' });
+	} catch (err) {
+		res.status(500).json({ message: 'Có lỗi xảy ra khi xóa bài viết' });
+	}
 };
